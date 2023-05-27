@@ -1,0 +1,18 @@
+{
+  "name": "read-firestore-export",
+  "version": "1.0.0",
+  "description": "read firestore export files which are leveldb log format",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MinTe Chou",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.2.1"
+  },
+  "dependencies": {
+    "crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz",
+    "protobufjs": "^7.2.3"
+  }
+}
