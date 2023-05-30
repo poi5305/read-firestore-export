@@ -1,7 +1,8 @@
 import fs, { promises as fsPromises, readv } from 'fs';
 import { buf } from 'crc-32/crc32c';
 import protobuf from 'protobufjs';
-import { FirestoreBackupDocumentProtoJSON, readFirestoreExport } from './firestore';
+import { readFirestoreExport } from './firestore';
+import { FirestoreBackupDocumentProtoJSON } from './firestoreBackupProto';
 
 async function ttt() {
   const root = await protobuf.load('ok.proto');
