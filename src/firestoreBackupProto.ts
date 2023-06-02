@@ -1,5 +1,5 @@
 // got from https://github.com/GoogleCloudPlatform/appengine-python-standard/blob/main/src/google/appengine/datastore/entity_bytes_pb2.py
-export const FirestoreBackupDocumentProtoJSON: protobuf.INamespace = {
+export const FirestoreBackupDocumentProtoJSON = {
   nested: {
     storage_onestore_v3_bytes: {
       options: {

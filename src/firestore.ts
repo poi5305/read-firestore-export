@@ -2,7 +2,7 @@ import fs from 'fs';
 import { buf as crc32c } from 'crc-32/crc32c';
 import path from 'path';
 import { readKindMetadata } from './protobufRawReader';
-import { FirestoreParser } from './firestoreParser';
+import { FirestoreParser, FirestoreParserFaster } from './firestoreParser';
 
 const ZERO = 0;
 const FULL = 1;
@@ -52,7 +52,7 @@ export class FirestoreBackupReader {
         const data = await this.readDocument();
 
         if (data.length !== 0) {
-          const object = FirestoreParser.convertBufferToObject(data);
+          const object = FirestoreParserFaster.convertBufferToObject(data);
           console.log(object);
         }
 
