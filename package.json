@@ -9,7 +9,7 @@
   "author": "MinTe Chou",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^20.2.1"
+    "@types/node": "^12.19.0"
   },
   "dependencies": {
     "crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz",

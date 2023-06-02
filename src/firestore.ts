@@ -23,6 +23,8 @@ export interface Record {
   data: Buffer;
 }
 
+export type CallbackType = ((d: any) => void) | ((d: any) => Promise<void>);
+
 export class FirestoreBackupReader {
   public static BLOCK_SIZE = 32768;
 
@@ -32,6 +34,7 @@ export class FirestoreBackupReader {
   public doChecksum: boolean;
   public fd: number;
   public fdPos: number;
+  public isEnd: boolean = false;
 
   private blockBuffer: Buffer = Buffer.alloc(FirestoreBackupReader.BLOCK_SIZE);
   private blockOffset: number = FirestoreBackupReader.BLOCK_SIZE;
@@ -46,36 +49,44 @@ export class FirestoreBackupReader {
     this.fileLength = stat.size;
   }
 
-  public async readAll() {
-    for (let i = 0; i < 1; i++) {
-      try {
-        const data = await this.readDocument();
-
-        if (data.length !== 0) {
-          const object = FirestoreParserFaster.convertBufferToObject(data);
-          console.log(object);
-        }
-
-        // check zero buffer
-        const blockRemainingBytes = ((this.blockOffset & 0x7fff) ^ 0x7fff) + 1;
-        // should not be zero, something wrong, sikp to next block
-        // or block bytes <= 6, sikp to next block
-        if (data.length === 0 || blockRemainingBytes <= 6) {
-          this.blockOffset += blockRemainingBytes;
-        }
-      } catch (e) {
-        console.log(e);
+  public async readAll(callback: CallbackType) {
+    while (true) {
+      if (this.isEnd) {
         break;
       }
-      if (this.blockOffset >= this.blockLength && this.fdPos >= this.fileLength) {
-        // file end
-        fs.closeSync(this.fd);
-        break;
+      const object = await this.readOne();
+      if (object === undefined) {
+        continue;
+      }
+      const p = callback(object);
+      if (p instanceof Promise) {
+        await p;
       }
     }
   }
 
-  public async readDocument(): Promise<Buffer> {
+  public async readOne(): Promise<any | undefined> {
+    const data = await this.readDocumentBS();
+    // check zero buffer
+    const blockRemainingBytes = ((this.blockOffset & 0x7fff) ^ 0x7fff) + 1;
+    // should not be zero, something wrong, sikp to next block
+    // or block bytes <= 6, sikp to next block
+    if (data.length === 0 || blockRemainingBytes <= 6) {
+      this.blockOffset += blockRemainingBytes;
+    }
+    if (this.blockOffset >= this.blockLength && this.fdPos >= this.fileLength) {
+      this.isEnd = true;
+      fs.closeSync(this.fd);
+    }
+    if (data.length !== 0) {
+      const object = FirestoreParserFaster.convertBufferToObject(data);
+      // const object = FirestoreParser.convertBufferToObject(data);
+      return object;
+    }
+    return undefined;
+  }
+
+  public async readDocumentBS(): Promise<Buffer> {
     let data = Buffer.alloc(0);
     do {
       const record = await this.readRecord();
@@ -90,7 +101,7 @@ export class FirestoreBackupReader {
   }
 
   // input as leveldb log format record start buffer, output is data buffer
-  public async readRecord(): Promise<Record> {
+  private async readRecord(): Promise<Record> {
     if (FirestoreBackupReader.BLOCK_SIZE - this.blockOffset <= 6) {
       await this.readBlockBuffer();
     }
@@ -165,13 +176,21 @@ export function getMetadataFilenames(exportMetadataPath: string): string[] {
  * Read firestore export documents
  * @param exportMetadataPath Should be metadata in table folder all_namespaces/kind_xxxxx/all_namespaces_kind_xxxxx.export_metadata
  */
-export async function readFirestoreExport(exportMetadataPath: string, callback: (data: any) => void) {
+export async function readAllFirestoreExport(exportMetadataPath: string, callback: CallbackType) {
   const outputFilenames = getMetadataFilenames(exportMetadataPath);
   const dirname = path.dirname(exportMetadataPath);
   for (const filename of outputFilenames) {
     const fullpath = `${dirname}${path.sep}${filename}`;
     const reader = new FirestoreBackupReader(fullpath, true);
-    await reader.readAll();
-    break;
+    await reader.readAll(callback);
   }
+}
+
+/**
+ * Read firestore one export documents
+ * @param outputPath Should be metadata in table folder all_namespaces/kind_xxxxx/output-9
+ */
+export async function readOneFirestoreExport(outputPath: string, callback: CallbackType) {
+  const reader = new FirestoreBackupReader(outputPath, true);
+  await reader.readAll(callback);
 }

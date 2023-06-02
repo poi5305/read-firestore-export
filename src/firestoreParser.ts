@@ -69,26 +69,11 @@ function buildFieldTree(root: any, parent: any = undefined): TreeField {
   return tree;
 }
 
-// const r = buildFieldTree(FirestoreBackupDocumentProtoJSON.nested.storage_onestore_v3_bytes);
-// console.log(JSON.stringify(r.nested['EntityProto'], null, 2));
-
-function getVarint(buffer: Buffer) {
-  console.log(buffer);
-  let pos = 0;
-  let i = 0;
-  let value = buffer[pos];
-  while (buffer[pos] & 0x80) {
-    value |= (buffer[pos++] & 0x7f) << (i++ * 7);
-  }
-  console.log(value);
-}
-
 function longToNumber(v: protobuf.Long): number {
   return (v.high & 2097151) * 2 ** 32 + v.low;
 }
 
-// getVarint(Buffer.from([0xc5, 0x01]));
-
+// faster but has some field not implement, like PropertyValue.PointValue
 export class FirestoreParserFaster {
   public static EntityProtoIndex = buildFieldTree(FirestoreBackupDocumentProtoJSON.nested.storage_onestore_v3_bytes)
     .nested['EntityProto'];
@@ -157,10 +142,7 @@ export class FirestoreParserFaster {
         }
       } else if (wiretype === 2) {
         let len = bs.int32();
-        if (len === 0) {
-          continue;
-        }
-        // TODO fix this, wired ???
+        // TODO fix me, wired ???
         if (len === 1 && protoType.type === 'Path') {
           len = bs.int32();
         }
