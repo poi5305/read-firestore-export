@@ -121,8 +121,8 @@ export class FirestoreParserFaster {
   public static convertBufferToObjectImpl(bs: protobuf.BufferReader, proto: TreeField, end: number): any {
     let object: any = {};
     while (bs.pos < end) {
-      const [id, wiretype] = readTag(bs.buf[bs.pos]);
-      bs.skip(1);
+      const tag = bs.int32();
+      const [id, wiretype] = readTag(tag);
       if (bs.pos >= end) {
         return object;
       }
@@ -141,11 +141,7 @@ export class FirestoreParserFaster {
           return fieldValue;
         }
       } else if (wiretype === 2) {
-        let len = bs.int32();
-        // TODO fix me, wired ???
-        if (len === 1 && protoType.type === 'Path') {
-          len = bs.int32();
-        }
+        const len = bs.int32();
         if (protoType.type === 'string' || protoType.type === 'bytes') {
           fieldValue = bs.buf.subarray(bs.pos, bs.pos + len);
           bs.skip(len);

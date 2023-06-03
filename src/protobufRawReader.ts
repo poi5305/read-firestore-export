@@ -14,6 +14,7 @@ export function readTag(value: number): [number, number] {
 export function decodeProtobuf(bs: protobuf.BufferReader): ProtobufValue[] {
   const protobufValues: ProtobufValue[] = [];
   while (bs.pos < bs.len) {
+    // FIXME tag is varint not just one byte
     const [id, wiretype] = readTag(bs.buf[bs.pos]);
     if (wiretype === 2) {
       const bytes = bs.skip(1).bytes();
