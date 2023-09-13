@@ -9,10 +9,15 @@
   "author": "MinTe Chou",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^12.19.0"
+    "@types/bluebird": "^3.5.38",
+    "@types/node": "^12.19.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
+    "bluebird": "^3.7.2",
     "crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz",
+    "firestore-size": "^2.0.7",
     "protobufjs": "^7.2.3"
   }
 }

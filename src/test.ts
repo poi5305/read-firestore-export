@@ -1,4 +1,9 @@
-import { readOneFirestoreExport, readAllFirestoreExport, FirestoreBackupReader } from './firestore';
+import {
+  readOneFirestoreExport,
+  readAllFirestoreExport,
+  FirestoreBackupReader,
+  readAllFirestoreExportThreads,
+} from './firestore';
 
 async function readOneOutput() {
   console.time('readOneOutput');
@@ -34,6 +39,37 @@ async function readAllOutput() {
   );
   console.timeEnd('readAllOutput');
 }
+
+async function test0() {
+  let time = Date.now();
+  let i = 0;
+  readAllFirestoreExport(
+    '/mnt/data/firestorebackup/IG-2023-08-22T20:00:05_99844/all_namespaces/kind_v1_IGUser/all_namespaces_kind_v1_IGUser.export_metadata',
+    (data: any) => {
+      i++;
+      if (i % 10000 === 0) {
+        console.log(i, Date.now() - time);
+      }
+    }
+  );
+}
+
+async function test1() {
+  let time = Date.now();
+  let i = 0;
+  await readAllFirestoreExportThreads(
+    '/mnt/data/firestorebackup/IG-2023-08-22T20:00:05_99844/all_namespaces/kind_v1_IGUser/all_namespaces_kind_v1_IGUser.export_metadata',
+    (data: any) => {
+      i++;
+      if (i % 10000 === 0) {
+        console.log(i, Date.now() - time);
+      }
+    },
+    6
+  );
+}
+
+test1();
 
 // readOneOutput();
 // readOneOutput2();

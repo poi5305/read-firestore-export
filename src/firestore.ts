@@ -2,7 +2,9 @@ import fs from 'fs';
 import { buf as crc32c } from 'crc-32/crc32c';
 import path from 'path';
 import { readKindMetadata } from './protobufRawReader';
-import { FirestoreParser, FirestoreParserFaster } from './firestoreParser';
+import { FirestoreParserFaster } from './firestoreParser';
+import { Worker } from 'worker_threads';
+import Bluebird from 'bluebird';
 
 const ZERO = 0;
 const FULL = 1;
@@ -193,4 +195,29 @@ export async function readAllFirestoreExport(exportMetadataPath: string, callbac
 export async function readOneFirestoreExport(outputPath: string, callback: CallbackType) {
   const reader = new FirestoreBackupReader(outputPath, true);
   await reader.readAll(callback);
+}
+
+export async function readAllFirestoreExportThreads(
+  exportMetadataPath: string,
+  callback: CallbackType,
+  threads: number = 4
+) {
+  const outputFilenames = getMetadataFilenames(exportMetadataPath);
+  const dirname = path.dirname(exportMetadataPath);
+  await Bluebird.map(
+    outputFilenames,
+    async (filename: string) =>
+      new Promise<void>(resolve => {
+        const fullpath = `${dirname}${path.sep}${filename}`;
+        const worker = new Worker('./workerThread.js', {
+          workerData: { fullpath: fullpath },
+        });
+        worker.on('message', callback);
+        worker.on('exit', code => {
+          console.log(`done ${fullpath}`);
+          resolve();
+        });
+      }),
+    { concurrency: threads }
+  );
 }
