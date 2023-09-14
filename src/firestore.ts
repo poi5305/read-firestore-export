@@ -209,7 +209,10 @@ export async function readAllFirestoreExportThreads(
     async (filename: string) =>
       new Promise<void>(resolve => {
         const fullpath = `${dirname}${path.sep}${filename}`;
-        const worker = new Worker('./workerThread.js', {
+        const workerJS = path.resolve(__dirname, './workerThreadImpl.js');
+        const workerWrapperJS = path.resolve(__dirname, './workerThread.js');
+        const workerPath = fs.existsSync(workerJS) ? workerJS : workerWrapperJS;
+        const worker = new Worker(workerPath, {
           workerData: { fullpath: fullpath },
         });
         worker.on('message', callback);
