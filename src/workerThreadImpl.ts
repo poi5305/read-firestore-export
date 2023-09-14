@@ -12,7 +12,6 @@ function post(data: any) {
 
 async function run() {
   const fullpath: string = workerData.fullpath;
-  console.log(`run ${fullpath}`);
   const reader = new FirestoreBackupReader(fullpath, true);
   await reader.readAll(post);
 }
